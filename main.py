@@ -30,10 +30,21 @@ def consultarsitesesc(url: str):
 def extrairdiasingredientes():
     soup = consultarsitesesc(url)
     cardapio: dict[str, list[str]] = {}
+
+    classes_dias = [
+    "has-light-green-cyan-background-color",
+    "has-very-light-gray-to-cyan-bluish-gray-gradient-background"
+    ]
+
     datas = soup.find_all(
     'p',
-    class_='has-light-green-cyan-background-color has-background has-medium-font-size',
+    class_="has-medium-font-size",
     )
+
+    datas = [
+    d for d in datas
+    if any(c in d.get("class", []) for c in classes_dias)
+    ]
 
     for d in datas:
         d: Tag
@@ -45,7 +56,7 @@ def extrairdiasingredientes():
         for ingrediente in ingredientes:
             ingrediente:Tag
 
-            if "has-light-green-cyan-background-color" in ingrediente.get("class",[]):
+            if any(c in ingrediente.get("class", []) for c in classes_dias):
                 break
 
             texto = ingrediente.get_text(strip=True)

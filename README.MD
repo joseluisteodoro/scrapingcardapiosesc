@@ -1,4 +1,4 @@
-# Nome do projeto
+# Scraping Cardápio SESC
 
 ![GitHub repo size](https://img.shields.io/github/repo-size/joseluisteodoro/scrappingcardapiosesc?style=for-the-badge)
 ![GitHub language count](https://img.shields.io/github/languages/count/joseluisteodoro/scrappingcardapiosesc?style=for-the-badge)
@@ -46,5 +46,5 @@ Configure o seu arquivo .env ou ambiente com as chaves necessárias, como:
 Após isso execute pela sua IDE ou no CMD digite:
 
 ```bash
-python maiin.py
+python main.py
 ```
