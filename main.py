@@ -12,28 +12,41 @@ load_dotenv()
 
 
 #variáveis
-url = "https://www.sescsp.org.br/editorial/cardapio-semanal-sesc-pompeia-2/"
+Cardapio = dict[str, list[str]]
+TodosCardapios = dict[str, Cardapio]
+url_sescs = {
+    "SESC Pompeia 🏭":"https://www.sescsp.org.br/editorial/cardapio-semanal-sesc-pompeia-2/",
+    "SESC Casa Verde 🌿":"https://www.sescsp.org.br/editorial/cardapio-semanal-sesc-casa-verde/",
+    "SESC Carmo 🏛":"https://www.sescsp.org.br/editorial/cardapio-semanal-sesc-carmo-2/",
+    # "SESC Pinheiros 🌲":"https://www.sescsp.org.br/editorial/cardapio-pinheiros/"
+    }
 
-
-
-
+custom_headers = {
+"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+"Accept-Language": "pt-BR"
+}
 
 
 def consultarsitesesc(url: str): 
-    response = requests.get(url)
+    response = requests.get(url,custom_headers)
     html = response.text
+
+    if response.status_code == 200:
+        return BeautifulSoup(html, 'html.parser')
     
-    return BeautifulSoup(html, 'html.parser')
+    else:
+        return {}
 
      
 
-def extrairdiasingredientes():
+def extrairdiasingredientes(url: str):
     soup = consultarsitesesc(url)
     cardapio: dict[str, list[str]] = {}
 
     classes_dias = [
     "has-light-green-cyan-background-color",
-    "has-very-light-gray-to-cyan-bluish-gray-gradient-background"
+    "has-very-light-gray-to-cyan-bluish-gray-gradient-background",
+    "has-very-light-gray-to-cyan-bluish-gray-gradient-background",
     ]
 
     datas = soup.find_all(
@@ -69,24 +82,35 @@ def extrairdiasingredientes():
 
 
 
-def enviar_email(cardapio: dict[str, list[str]]):
+def enviar_email(todos_cardapaios: TodosCardapios):
+    
     remetente = os.getenv("EMAIL_FROM")
     senha = os.getenv("SENHAAPP")
     destinatario = os.getenv("EMAIL_TO")
 
     msg = EmailMessage()
-    msg["Subject"] = "Cardápio Sesc Pompeia"
+    msg["Subject"] = "Cardápio SESC"
     msg["From"] = remetente
     msg["To"] = destinatario
 
 
     #Corpo do email
     corpo = []
-    for dia,itens in cardapio.items():
-        corpo.append(f"\nDia: {dia}")
+    for unidade,cardapio in todos_cardapaios.items():
+        corpo.append(f"\nUnidade: {unidade}")
+
+        if not cardapio:
+            corpo.append("Nenhum cardápio encontrado")
+            continue
+
+        for dia,itens in cardapio.items():
+            corpo.append(f"\nDia: {dia}")
         
-        for item in itens:
-            corpo.append(item)
+            
+            for item in itens:
+                corpo.append(item)
+
+        corpo.append("\n")
 
     agora = datetime.now(ZoneInfo("America/Sao_Paulo"))
     data_envio = agora.strftime("%d/%m/%Y às %H:%M")
@@ -108,8 +132,15 @@ def enviar_email(cardapio: dict[str, list[str]]):
 
 
 def main():
-    cardapio = extrairdiasingredientes()
-    enviar_email(cardapio)
+
+    todos_cardapios = {}
+
+    for nome, url in url_sescs.items():
+        print(f"Buscando {nome}")
+        todos_cardapios[nome] = extrairdiasingredientes(url)
+
+
+    enviar_email(todos_cardapios)
     
 
 
